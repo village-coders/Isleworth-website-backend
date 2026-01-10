@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const UserModel = require("../Models/user")
 
 const isLoggedIn =  async (req, res, next)=>{
-    const token = req.cookies.accessToken
+    const token = req.cookies.token
     
 
     if(!token){

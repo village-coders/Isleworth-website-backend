@@ -176,6 +176,40 @@ const login = async (req, res, next) => {
     }
 };
 
+
+const me = async (req, res, next) => {
+    const {id} = req.user;
+    try {
+
+        const user = await userModel.findById(id);
+        
+        if (!user) {
+            return res.status(404).json({
+                status: "error",
+                message: "User not found"
+            });
+        }
+
+
+        const userData = {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            image: user.authImage
+        };
+
+
+        res.status(200).json({
+            status: "success",
+            user: userData
+        });
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
 // PUT /users/update-password/:id
 
 const updateUserPassword = async (req, res, next) => {
@@ -232,5 +266,6 @@ module.exports = {
     verifyEmail,
     logout,
     login,
+    me,
     updateUserPassword
 }
