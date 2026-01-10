@@ -19,7 +19,7 @@ const galleryRouter = require('./Routes/galleryRouter');
 // Middleware
 const errorHandler = require('./Middlewares/errorHandler');
 
-const clientDomain = process.env.client_domain || "http://localhost:3000";
+const clientDomain = process.env.client_domain || "http://127.0.0.1:5502/";
 
 // 🔐 CORS configuration
 app.use(cors({
