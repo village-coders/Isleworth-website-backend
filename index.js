@@ -1,48 +1,66 @@
+// index.js
 const express = require('express');
 const app = express();
 const cors = require("cors");
 const morgan = require("morgan");
 const dotenv = require('dotenv');
-const errorHandler = require('./Middlewares/errorHandler');
+const cookieParser = require('cookie-parser');
+
+// Load environment variables
+dotenv.config();
+require("./Config/connectToDb");
+
+// Routers
 const newsRouter = require('./Routes/newsRouter');
 const authRouter = require('./Routes/authRouter');
 const facebookRouter = require('./Routes/facebookRouter');
 const galleryRouter = require('./Routes/galleryRouter');
-dotenv.config()
 
-require("./Config/connectToDb");
-// require("./Services/Nodemailer/transporter");
+// Middleware
+const errorHandler = require('./Middlewares/errorHandler');
 
-// const newsRouter = require('./Routes/newsRouter');
+const clientDomain = process.env.client_domain || "http://localhost:3000";
 
+// 🔐 CORS configuration
+app.use(cors({
+  origin: clientDomain,   // only used for CORS, never for routes
+  credentials: true
+}));
 
-const clientDomain = process.env.client_domain
+// Parse JSON & urlencoded
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-app.use(cors())
-app.use(express.json())
-app.use(express.urlencoded({extended:true}))
-app.use(morgan("dev"))
+// Logging
+app.use(morgan("dev"));
 
-app.listen(500, ()=>{
-    console.log('listen to port 500');    
-})
-//Routes
-app.get("/", (req, res)=>{res.send("Welcome to Iwo Website Api version 1.0")})
+// Server listen
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
+// Root route
+app.get("/", (req, res) => {
+  res.send("Welcome to Isleworth Deen Centre API version 1.0");
+});
 
+// 🔹 Mount routers using RELATIVE paths only
 app.use("/api/news", newsRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/facebook", facebookRouter);
 app.use("/api/gallery", galleryRouter);
 
-app.use(express.json())
-
+// 404 catch-all for undefined routes
 app.all("/{*any}", (req, res) => {
-    res.json(`${req.method} ${req.originalUrl} is not an endpoint on this server.`)
-})
-// app.use((req, res, next) => {
-//   res.set('Cache-Control', 'no-store');
-//   next();
-// });
+  res.status(404).json({
+    status: "error",
+    message: `${req.method} ${req.originalUrl} is not an endpoint on this server.`
+  });
+});
 
+// Global error handler (no path here!)
 app.use(errorHandler);
+
+

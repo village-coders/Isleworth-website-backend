@@ -2,11 +2,8 @@ const jwt = require("jsonwebtoken");
 const UserModel = require("../Models/user")
 
 const isLoggedIn =  async (req, res, next)=>{
-    let token;
-    if(req.headers.authorization && req.headers.authorization.startsWith("Bearer")){
-        // extract the token
-        token = req.headers.authorization.split(" ")[1]
-    }
+    const token = req.cookies.accessToken
+    
 
     if(!token){
         return res.status(403).json({
@@ -29,8 +26,8 @@ const isLoggedIn =  async (req, res, next)=>{
     req.user = user
     // console.log(user);
     // console.log(decoded);
-    console.log(req.user);
-    console.log(user.id); 
+    // console.log(req.user);
+    // console.log(user.id); 
     
     next()
 }

@@ -21,7 +21,7 @@ const signup = async (req, res, next)=>{
         const token = generateRandomString(8)
         const verificationExp = Date.now() + 300000
 
-        const user = await userModel.create({...req.body, password: hashedPassword, verificationToken: token, verificationExp})
+        const user = await userModel.create({...req.body, password: hashedPassword, isVerified: true})
 
         if(!user){
            return res.status(404).json({
@@ -123,12 +123,13 @@ const login = async (req, res, next) => {
                 const userFirstName = user.name.split(" ")[0]
                 const newCode = generateRandomString(8) 
 
+                
                 user.verificationToken = newCode;
                 user.verificationExp = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 mins
                 await user.save();
 
                 // ✅ Send the new code via email (mock or real)
-                await sendVerificationEmail(user.email, userFirstName, newCode); // You implement this
+                // await sendVerificationEmail(user.email, userFirstName, newCode); // You implement this
 
                 return res.status(403).json({
                     message: "Email not verified. A new verification code has been sent.",
@@ -156,10 +157,16 @@ const login = async (req, res, next) => {
             image: user.authImage
         };
 
+        res.cookie("token", accessToken, {
+            httpOnly: true,       // 🔐 JS can't access
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",  // or "none" if cross-site
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
         res.status(200).json({
             status: "success",
             message: "Login successful. Welcome back!",
-            accessToken,
             isVerified : user?.isVerified,
             user: userData
         });
@@ -199,9 +206,31 @@ const updateUserPassword = async (req, res, next) => {
 };
 
 
+// Logout 
+
+const logout = async (req, res, next) => {
+    try {
+        res.clearCookie("token");
+
+        res.status(200).json({
+            status: "success",
+            message: "Logout successful"
+        });
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
+
+
+
+
+
 module.exports = {
     signup,
     verifyEmail,
+    logout,
     login,
     updateUserPassword
 }
