@@ -15,7 +15,6 @@ require("./Config/connectToDb");
 
 // const newsRouter = require('./Routes/newsRouter');
 
-app.use()
 
 const clientDomain = process.env.client_domain
 
