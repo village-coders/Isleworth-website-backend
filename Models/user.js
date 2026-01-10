@@ -24,21 +24,12 @@ const userSchema = new mongoose.Schema({
     enum: ["buyer", "seller", "admin"],
     default: "admin"
   },
-  description: {
+
+  refreshToken: {
     type: String,
-    maxlength: [500, 'Description cannot exceed 500 characters']
+    default: null
   },
   
-  // Location Information
-  address: {
-    type: String,
-    // required: [true, 'Please provide your address']
-  },
-  deliveryRadius: {
-    type: Number,
-    // required: [true, 'Please specify delivery radius'],
-
-  },  
   
   // Status and Verification
   isVerified: {
@@ -52,19 +43,6 @@ const userSchema = new mongoose.Schema({
   verificationToken: String,
 
   verificationExp: String,
-  
-  // Ratings and Stats
-  rating: {
-    type: Number,
-    min: [1, 'Rating must be at least 1'],
-    max: [5, 'Rating must not exceed 5']
-  },
-  ratingCount: {
-    type: Number,
-  },
-  ordersCompleted: {
-    type: Number,
-  },
   
   // Timestamps
   createdAt: {

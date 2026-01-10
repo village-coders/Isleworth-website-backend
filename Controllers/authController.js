@@ -4,13 +4,17 @@ const userModel = require("../Models/user")
 const sendVerificationEmail = require("../Services/Nodemailer/sendVerificationEmail")
 const generateRandomString = require("../Utils/generateRandomStrings")
 
+const generateTokens = require("../Utils/generateTokens")
+
+
+
 //Signup
 const signup = async (req, res, next)=>{
     const {password, email, name,} = req.body
     // const file = req.file.path
     try {
         // if (!req.file || !req.file.path) {
-        //     return res.status(400).json({
+            //     return res.status(400).json({
         //         status: "error",
         //         message: "Image upload failed or missing",
         //     });
@@ -20,9 +24,9 @@ const signup = async (req, res, next)=>{
 
         const token = generateRandomString(8)
         const verificationExp = Date.now() + 300000
-
+        
         const user = await userModel.create({...req.body, password: hashedPassword, isVerified: true})
-
+        
         if(!user){
            return res.status(404).json({
                 status: "error",
@@ -141,12 +145,28 @@ const login = async (req, res, next) => {
             });
         }
 
+        const {refreshToken, accessToken} = generateTokens(user)
 
-        const accessToken = jwt.sign(
-            { id: user._id, name: user.name, email: user.email },
-            process.env.jwt_secret,
-            { expiresIn: process.env.jwt_exp }
-        );
+
+        user.refreshToken = refreshToken;
+        await user.save();
+
+
+        res.cookie("token", accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000 // 15 mins
+        });
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+
 
         const userData = {
             _id: user._id,
@@ -156,13 +176,6 @@ const login = async (req, res, next) => {
             role: user.role,
             image: user.authImage
         };
-
-        res.cookie("token", accessToken, {
-            httpOnly: true,       // 🔐 JS can't access
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",  // or "none" if cross-site
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
 
         res.status(200).json({
             status: "success",
@@ -175,6 +188,40 @@ const login = async (req, res, next) => {
         next(error);
     }
 };
+
+
+const refreshAccessToken = async (req, res, next) => {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) return res.status(401).json({ status: 'error', message: 'No refresh token provided' });
+
+    try {
+        const decoded = jwt.verify(refreshToken, process.env.jwt_refresh_secret);
+        const user = await userModel.findById(decoded.id);
+
+        if (!user || user.refreshToken !== refreshToken) {
+            return res.status(403).json({ status: 'error', message: 'Invalid refresh token' });
+        }
+
+        const newAccessToken = jwt.sign(
+            { id: user._id, name: user.name, email: user.email },
+            process.env.jwt_secret,
+            { expiresIn: process.env.jwt_exp }
+        );
+
+        res.cookie("token", newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000
+        });
+
+        res.status(200).json({ status: 'success', message: 'Access token refreshed' });
+    } catch (error) {
+        console.error(error);
+        res.status(403).json({ status: 'error', message: 'Invalid or expired refresh token' });
+    }
+};
+
 
 
 const me = async (req, res, next) => {
@@ -244,7 +291,13 @@ const updateUserPassword = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
     try {
+        const userId = req.user?.id; // Assuming you have user info from middleware
+        if (userId) {
+            await userModel.findByIdAndUpdate(userId, { refreshToken: null });
+        }
+
         res.clearCookie("token");
+        res.clearCookie("refreshToken");
 
         res.status(200).json({
             status: "success",
@@ -261,11 +314,13 @@ const logout = async (req, res, next) => {
 
 
 
+
 module.exports = {
     signup,
     verifyEmail,
     logout,
     login,
     me,
-    updateUserPassword
-}
+    updateUserPassword,
+    refreshAccessToken 
+};
