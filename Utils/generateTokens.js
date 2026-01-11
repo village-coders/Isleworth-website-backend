@@ -1,3 +1,7 @@
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+
+
 const generateTokens = (user) => {
     const accessToken = jwt.sign(
         { id: user._id, name: user.name, email: user.email },
