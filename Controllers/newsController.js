@@ -11,11 +11,11 @@ const createNews = async (req, res, next) => {
 
     const news = await newsModel.create({
       ...req.body,
-      mainImage: req.files.mainImage[0]?.path.replace(/\\/g, '/'),
-      image1: req.files.image1?.[0]?.path.replace(/\\/g, '/'),
-      image2: req.files.image2?.[0]?.path.replace(/\\/g, '/'),
-      image3: req.files.image3?.[0]?.path.replace(/\\/g, '/'),
-      createdBy: req.user?.id || null,
+        mainImage: req.files?.mainImage?.[0]?.path.replace(/\\/g, '/'),
+        image1: req.files?.image1?.[0]?.path.replace(/\\/g, '/'),
+        image2: req.files?.image2?.[0]?.path.replace(/\\/g, '/'),
+        image3: req.files?.image3?.[0]?.path.replace(/\\/g, '/'),
+        createdBy: req.user?.id || null,
     });
 
     res.status(201).json({
@@ -51,8 +51,8 @@ const getAllNews = async (req, res, next)=>{
 
         const news = await query;
         
-        // res.json(foods)
-        if(!news){
+
+        if(news.length === 0){
             return res.status(404).json({
                 status: "error",
                 message: "news not found"
@@ -110,8 +110,8 @@ const deleteNewsById = async (req, res, next)=>{
                 message: `news with id: ${id} not found`
             })
         }
-        res.status(202).json({
-            status: "error",
+        res.status(200).json({
+            status: "status",
             message: "News deleted successfully"
         })
     } catch (error) {
@@ -122,7 +122,6 @@ const deleteNewsById = async (req, res, next)=>{
 
 const updateNews = async (req, res, next)=>{
     const {id} = req.params
-    const { title, date, description } = req.body;
     try {
 
         const updatedData = {...req.body};
@@ -141,10 +140,10 @@ const updateNews = async (req, res, next)=>{
         }
 
 
-        const updatedEvent = await newsModel.findByIdAndUpdate(id, updatedData, { new: true });
+        const updatedNews = await newsModel.findByIdAndUpdate(id, updatedData, { new: true });
 
         
-        if(!updatedEvent){
+        if(!updatedNews){
             return res.status(404).json({
                 status: "error",
                 message: "event not updated"
