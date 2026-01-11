@@ -2,12 +2,12 @@ const newsModel = require('../Models/news')
 
 const createNews = async (req, res, next) => {
   try {
-    if (!req.files || !req.files.mainImage) {
-      return res.status(400).json({
-        status: "error",
-        message: "Main image is required",
-      });
-    }
+    // if (!req.files || !req.files.mainImage) {
+    //   return res.status(400).json({
+    //     status: "error",
+    //     message: "Main image is required",
+    //   });
+    // }
 
     const news = await newsModel.create({
       ...req.body,
