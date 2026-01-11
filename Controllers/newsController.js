@@ -36,16 +36,20 @@ const getAllNews = async (req, res, next)=>{
     try {
          // Build query object
         const filter = {};
-        
+
         if (category) {
             filter.category = category;
         }
 
+
+
+        let query = newsModel.find(filter).sort({ createdAt: -1 });
+
         if (limit) {
-            filter.limit = limit;
+            query = query.limit(parseInt(limit));
         }
 
-        const news = await newsModel.find(filter).sort({ createdAt: -1 });
+        const news = await query;
         
         // res.json(foods)
         if(!news){
