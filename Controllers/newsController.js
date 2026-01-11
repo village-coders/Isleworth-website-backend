@@ -31,14 +31,18 @@ const createNews = async (req, res, next) => {
 
 
 const getAllNews = async (req, res, next)=>{
-    const { category } = req.query;
-    console.log(category);
+    const { category, limit } = req.query;
     
     try {
          // Build query object
         const filter = {};
+        
         if (category) {
             filter.category = category;
+        }
+
+        if (limit) {
+            filter.limit = limit;
         }
 
         const news = await newsModel.find(filter).sort({ createdAt: -1 });
