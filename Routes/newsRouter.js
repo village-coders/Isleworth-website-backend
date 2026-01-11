@@ -5,7 +5,8 @@ const {
     createNews,
     getAllNews,
     getNewsById,
-    deleteNewsById
+    deleteNewsById,
+    updateNews
 } = require('../Controllers/newsController');
 
 const uploadNewsImages = require("../Config/multer");
@@ -25,6 +26,19 @@ newsRouter.post(
         { name: "image3", maxCount: 1 },
     ]),
     createNews
+);
+
+
+newsRouter.put(
+    "/:id",
+    isLoggedIn,
+    uploadNewsImages.fields([
+        { name: "mainImage", maxCount: 1 },
+        { name: "image1", maxCount: 1 },
+        { name: "image2", maxCount: 1 },
+        { name: "image3", maxCount: 1 },
+    ]),
+    updateNews
 );
 
 module.exports = newsRouter;

@@ -113,17 +113,36 @@ const deleteNewsById = async (req, res, next)=>{
 }
 
 const updateNews = async (req, res, next)=>{
-    const {id} = req.params.id
+    const {id} = req.params
     const { title, date, description } = req.body;
     try {
-        if (!req.file || !req.file.path) {
-            return res.status(400).json({
-                status: "error",
-                message: "Image upload failed or missing",
-            });
+
+        const updatedData = {...req.body};
+
+        if(req.files.mainImage){
+            updatedData.mainImage = req.files.mainImage[0]?.path.replace(/\\/g, '/')
         }
-        const updatedData = { title, date, description, image: req.file.path };
+        if(req.files.image1){
+            updatedData.image1 = req.files.image1[0]?.path.replace(/\\/g, '/')
+        }
+        if(req.files.image2){
+            updatedData.image2 = req.files.image2[0]?.path.replace(/\\/g, '/')
+        }
+        if(req.files.image3){
+            updatedData.image3 = req.files.image3[0]?.path.replace(/\\/g, '/')
+        }
+
+
         const updatedEvent = await newsModel.findByIdAndUpdate(id, updatedData, { new: true });
+
+        
+        if(!updatedEvent){
+            return res.status(404).json({
+                status: "error",
+                message: "event not updated"
+            })
+        }
+
         res.status(200).json({
             status: "success",
             message: "news update successfully",

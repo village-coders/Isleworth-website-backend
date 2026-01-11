@@ -2,15 +2,16 @@ const jwt = require("jsonwebtoken");
 const UserModel = require("../Models/user")
 
 const isLoggedIn =  async (req, res, next)=>{
-    const token = req.cookies.token
-    
+    const authHeader = req.headers.authorization;
 
-    if(!token){
-        return res.status(403).json({
-            status: "error",
-            message: "Please provide token"
-        })
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(403).json({
+        status: "error",
+        message: "No token provided",
+      });
     }
+
+    const token = authHeader.split(" ")[1];
     // verify if the token is valid and has not expired
     const decoded = jwt.verify(token, process.env.jwt_secret)
     // find the user that the token was generated for
